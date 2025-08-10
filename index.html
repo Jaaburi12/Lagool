@@ -3,99 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StellarTerm Laam/XLM Widget</title>
+    <title>Laam/XLM Trading Widget</title>
+    <script src="https://unpkg.com/stellar-sdk@11.0.0/dist/stellar-sdk.min.js"></script>
     <style>
-        body {
+        * {
             margin: 0;
-            padding: 20px;
-            background-color: #f0f2f5;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .stellarterm-widget {
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 450px;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .trading-widget {
+            max-width: 600px;
             margin: 0 auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            color: white;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
 
         .widget-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
             text-align: center;
-            margin-bottom: 24px;
         }
 
         .widget-header h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
 
-        .widget-header .pair-info {
-            font-size: 14px;
+        .widget-header .subtitle {
+            font-size: 16px;
             opacity: 0.9;
-            margin-top: 4px;
+        }
+
+        .widget-content {
+            padding: 24px;
+        }
+
+        .status-bar {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
         .market-overview {
-            background: rgba(255, 255, 255, 0.1);
+            background: #f8f9fa;
             border-radius: 12px;
             padding: 20px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
+            margin-bottom: 24px;
         }
 
         .market-overview h3 {
-            margin: 0 0 16px 0;
+            color: #333;
+            margin-bottom: 16px;
             font-size: 18px;
             font-weight: 600;
         }
 
         .market-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
         }
 
         .market-item {
-            display: flex;
-            flex-direction: column;
+            text-align: center;
         }
 
         .market-item .label {
             font-size: 12px;
-            opacity: 0.8;
+            color: #666;
             margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .market-item .value {
             font-size: 16px;
             font-weight: 600;
+            color: #333;
         }
 
         .market-item .value.positive {
-            color: #4ade80;
+            color: #28a745;
         }
 
         .market-item .value.negative {
-            color: #f87171;
+            color: #dc3545;
         }
 
-        .order-book {
-            background: rgba(255, 255, 255, 0.1);
+        .trading-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .order-book, .trading-form {
+            background: #f8f9fa;
             border-radius: 12px;
             padding: 20px;
-            backdrop-filter: blur(10px);
         }
 
-        .order-book h3 {
-            margin: 0 0 16px 0;
+        .order-book h3, .trading-form h3 {
+            color: #333;
+            margin-bottom: 16px;
             font-size: 18px;
             font-weight: 600;
-            text-align: center;
         }
 
         .order-sections {
@@ -105,57 +154,160 @@
         }
 
         .order-section h4 {
-            margin: 0 0 12px 0;
             font-size: 14px;
             font-weight: 600;
+            margin-bottom: 12px;
             text-align: center;
         }
 
         .buy-orders h4 {
-            color: #4ade80;
+            color: #28a745;
         }
 
         .sell-orders h4 {
-            color: #f87171;
+            color: #dc3545;
         }
 
         .order-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 11px;
         }
 
         .order-table th {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.05);
             padding: 8px 4px;
             text-align: center;
             font-weight: 600;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border-bottom: 1px solid #dee2e6;
         }
 
         .order-table td {
             padding: 6px 4px;
             text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid #f1f3f4;
         }
 
         .buy-orders .order-table tbody tr:hover {
-            background: rgba(74, 222, 128, 0.2);
+            background: rgba(40, 167, 69, 0.1);
         }
 
         .sell-orders .order-table tbody tr:hover {
-            background: rgba(248, 113, 113, 0.2);
+            background: rgba(220, 53, 69, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .wallet-status {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .wallet-status.connected {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .wallet-status.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .footer {
             text-align: center;
-            margin-top: 20px;
+            padding: 16px;
+            color: #666;
             font-size: 12px;
-            opacity: 0.7;
+            border-top: 1px solid #e9ecef;
         }
 
         .footer a {
-            color: #93c5fd;
+            color: #667eea;
             text-decoration: none;
         }
 
@@ -163,202 +315,301 @@
             text-decoration: underline;
         }
 
-        .refresh-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-top: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .refresh-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
-        }
-
-        @media (max-width: 480px) {
-            .stellarterm-widget {
-                margin: 10px;
-                padding: 16px;
+        @media (max-width: 768px) {
+            .trading-section {
+                grid-template-columns: 1fr;
             }
 
             .order-sections {
                 grid-template-columns: 1fr;
-                gap: 20px;
             }
 
             .market-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
 </head>
 <body>
-    <div class="stellarterm-widget">
+    <div class="trading-widget">
         <div class="widget-header">
             <h1>Laam/XLM Trading</h1>
-            <div class="pair-info">StellarTerm Exchange Widget</div>
+            <div class="subtitle">Stellar DEX Trading Widget</div>
         </div>
 
-        <div class="market-overview">
-            <h3>Market Overview</h3>
-            <div class="market-grid">
-                <div class="market-item">
-                    <div class="label">Last Price</div>
-                    <div class="value" id="last-price">0.1367238 XLM</div>
+        <div class="widget-content">
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>Live Data</span>
                 </div>
-                <div class="market-item">
-                    <div class="label">USD Price</div>
-                    <div class="value" id="last-usd-price">$0.06047</div>
-                </div>
-                <div class="market-item">
-                    <div class="label">24h Change</div>
-                    <div class="value positive" id="24h-changes">+1.28%</div>
-                </div>
-                <div class="market-item">
-                    <div class="label">24h Volume</div>
-                    <div class="value" id="24h-volume">119.85 XLM</div>
-                </div>
-                <div class="market-item">
-                    <div class="label">24h High</div>
-                    <div class="value" id="24h-high">0.148561 XLM</div>
-                </div>
-                <div class="market-item">
-                    <div class="label">24h Low</div>
-                    <div class="value" id="24h-low">0.1162133 XLM</div>
-                </div>
+                <div id="last-updated">Loading...</div>
             </div>
-        </div>
 
-        <div class="order-book">
-            <h3>Order Book</h3>
-            <div class="order-sections">
-                <div class="buy-orders">
-                    <h4>Buy Offers</h4>
-                    <table class="order-table">
-                        <thead>
-                            <tr>
-                                <th>Price</th>
-                                <th>Amount</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="buy-offers-body">
-                            <tr>
-                                <td>0.1350</td>
-                                <td>31,000.74</td>
-                                <td>4,185.10</td>
-                            </tr>
-                            <tr>
-                                <td>0.1340</td>
-                                <td>15,500.00</td>
-                                <td>2,077.00</td>
-                            </tr>
-                            <tr>
-                                <td>0.1330</td>
-                                <td>8,200.50</td>
-                                <td>1,090.67</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="sell-orders">
-                    <h4>Sell Offers</h4>
-                    <table class="order-table">
-                        <thead>
-                            <tr>
-                                <th>Price</th>
-                                <th>Amount</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="sell-offers-body">
-                            <tr>
-                                <td>0.1370</td>
-                                <td>290.00</td>
-                                <td>39.73</td>
-                            </tr>
-                            <tr>
-                                <td>0.1380</td>
-                                <td>1,250.00</td>
-                                <td>172.50</td>
-                            </tr>
-                            <tr>
-                                <td>0.1390</td>
-                                <td>2,100.00</td>
-                                <td>291.90</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="market-overview">
+                <h3>Market Overview</h3>
+                <div class="market-grid">
+                    <div class="market-item">
+                        <div class="label">Last Price</div>
+                        <div class="value" id="last-price">Loading...</div>
+                    </div>
+                    <div class="market-item">
+                        <div class="label">24h Change</div>
+                        <div class="value" id="24h-change">Loading...</div>
+                    </div>
+                    <div class="market-item">
+                        <div class="label">24h High</div>
+                        <div class="value" id="24h-high">Loading...</div>
+                    </div>
+                    <div class="market-item">
+                        <div class="label">24h Low</div>
+                        <div class="value" id="24h-low">Loading...</div>
+                    </div>
+                    <div class="market-item">
+                        <div class="label">24h Volume</div>
+                        <div class="value" id="24h-volume">Loading...</div>
+                    </div>
+                    <div class="market-item">
+                        <div class="label">Spread</div>
+                        <div class="value" id="spread">Loading...</div>
+                    </div>
                 </div>
             </div>
 
-            <div style="text-align: center;">
-                <button class="refresh-btn" onclick="refreshData()">Refresh Data</button>
+            <div class="trading-section">
+                <div class="order-book">
+                    <h3>Order Book</h3>
+                    <div class="order-sections">
+                        <div class="buy-orders">
+                            <h4>Buy Offers</h4>
+                            <table class="order-table">
+                                <thead>
+                                    <tr>
+                                        <th>Price</th>
+                                        <th>Amount</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="buy-offers-body">
+                                    <tr><td colspan="3">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="sell-orders">
+                            <h4>Sell Offers</h4>
+                            <table class="order-table">
+                                <thead>
+                                    <tr>
+                                        <th>Price</th>
+                                        <th>Amount</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sell-offers-body">
+                                    <tr><td colspan="3">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trading-form">
+                    <h3>Place Order</h3>
+                    
+                    <div class="wallet-status" id="wallet-status">
+                        <span class="loading"></span> Checking wallet connection...
+                    </div>
+
+                    <div class="form-group">
+                        <label for="order-type">Order Type</label>
+                        <select id="order-type">
+                            <option value="buy">Buy Laam</option>
+                            <option value="sell">Sell Laam</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="amount">Amount (Laam)</label>
+                        <input type="number" id="amount" step="any" placeholder="Enter amount">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="price">Price (XLM per Laam)</label>
+                        <input type="number" id="price" step="any" placeholder="Enter price">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Total: <span id="total-display">0 XLM</span></label>
+                    </div>
+
+                    <button class="btn btn-primary" id="place-order-btn" onclick="placeOrder()" disabled>
+                        Connect Wallet First
+                    </button>
+
+                    <button class="btn btn-success" id="create-trustline-btn" onclick="createTrustline()" style="display: none; margin-top: 8px;">
+                        Create Laam Trustline
+                    </button>
+                </div>
             </div>
         </div>
 
         <div class="footer">
-            <p>Data from <a href="https://stellarterm.com" target="_blank">StellarTerm</a></p>
-            <p>Last updated: <span id="last-updated"></span></p>
+            <p>Powered by <a href="https://stellar.org" target="_blank">Stellar Network</a> | 
+            Data from <a href="https://horizon.stellar.org" target="_blank">Horizon API</a></p>
+            <p>⚠️ Always verify transactions before signing. This widget does not store your private keys.</p>
         </div>
     </div>
 
     <script>
-        // Update the last updated timestamp
-        function updateTimestamp() {
-            const now = new Date();
-            const timestamp = now.toLocaleString('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            });
-            document.getElementById('last-updated').textContent = timestamp;
-        }
+        // Stellar SDK setup
+        const server = new StellarSdk.Server('https://horizon.stellar.org');
+        
+        // Asset definitions
+        const laamAsset = new StellarSdk.Asset(
+            'Laam',
+            'GAL4ECDAXNBMJYFCWIJ32HKVIRLCNEXY664CAZYI3EINQWPLXTMEPR64'
+        );
+        const xlmAsset = StellarSdk.Asset.native();
 
-        // Simulate data refresh (in a real implementation, this would fetch from an API)
-        function refreshData() {
-            // Add a loading state
-            const refreshBtn = document.querySelector('.refresh-btn');
-            const originalText = refreshBtn.textContent;
-            refreshBtn.textContent = 'Refreshing...';
-            refreshBtn.disabled = true;
+        // Global state
+        let walletConnected = false;
+        let userPublicKey = null;
+        let currentOrderBook = null;
 
-            // Simulate API call delay
-            setTimeout(() => {
-                // In a real implementation, you would fetch new data here
-                // For now, we'll just update the timestamp
-                updateTimestamp();
-                
-                // Restore button state
-                refreshBtn.textContent = originalText;
-                refreshBtn.disabled = false;
-                
-                // Add a subtle animation to show data was refreshed
-                document.querySelector('.stellarterm-widget').style.transform = 'scale(1.02)';
-                setTimeout(() => {
-                    document.querySelector('.stellarterm-widget').style.transform = 'scale(1)';
-                }, 200);
-            }, 1000);
-        }
-
-        // Initialize timestamp on page load
+        // Initialize the widget
         document.addEventListener('DOMContentLoaded', function() {
-            updateTimestamp();
+            checkWalletConnection();
+            fetchMarketData();
+            setupEventListeners();
+            
+            // Auto-refresh market data every 15 seconds
+            setInterval(fetchMarketData, 15000);
         });
 
-        // Auto-refresh every 30 seconds (optional)
-        setInterval(updateTimestamp, 30000);
-    </script>
-</body>
-</html>
+        function setupEventListeners() {
+            // Update total when amount or price changes
+            document.getElementById('amount').addEventListener('input', updateTotal);
+            document.getElementById('price').addEventListener('input', updateTotal);
+        }
 
+        function updateTotal() {
+            const amount = parseFloat(document.getElementById('amount').value) || 0;
+            const price = parseFloat(document.getElementById('price').value) || 0;
+            const total = (amount * price).toFixed(7);
+            document.getElementById('total-display').textContent = `${total} XLM`;
+        }
+
+        async function checkWalletConnection() {
+            const statusEl = document.getElementById('wallet-status');
+            const placeOrderBtn = document.getElementById('place-order-btn');
+
+            try {
+                if (window.freighterApi) {
+                    const isAllowed = await window.freighterApi.isAllowed();
+                    if (isAllowed) {
+                        userPublicKey = await window.freighterApi.getPublicKey();
+                        walletConnected = true;
+                        
+                        statusEl.className = 'wallet-status connected';
+                        statusEl.innerHTML = `✅ Wallet Connected: ${userPublicKey.substring(0, 8)}...`;
+                        
+                        placeOrderBtn.disabled = false;
+                        placeOrderBtn.textContent = 'Place Order';
+
+                        // Check for Laam trustline
+                        await checkLaamTrustline();
+                    } else {
+                        throw new Error('Wallet not connected');
+                    }
+                } else {
+                    throw new Error('Freighter wallet not found');
+                }
+            } catch (error) {
+                statusEl.className = 'wallet-status error';
+                statusEl.innerHTML = `❌ ${error.message}. <a href="https://freighter.app" target="_blank">Install Freighter</a>`;
+                
+                placeOrderBtn.disabled = true;
+                placeOrderBtn.textContent = 'Install Freighter Wallet';
+            }
+        }
+
+        async function checkLaamTrustline() {
+            if (!userPublicKey) return;
+
+            try {
+                const account = await server.loadAccount(userPublicKey);
+                const hasLaamTrustline = account.balances.some(balance => 
+                    balance.asset_code === 'Laam' && 
+                    balance.asset_issuer === 'GAL4ECDAXNBMJYFCWIJ32HKVIRLCNEXY664CAZYI3EINQWPLXTMEPR64'
+                );
+
+                const trustlineBtn = document.getElementById('create-trustline-btn');
+                if (!hasLaamTrustline) {
+                    trustlineBtn.style.display = 'block';
+                } else {
+                    trustlineBtn.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking trustline:', error);
+            }
+        }
+
+        async function fetchMarketData() {
+            try {
+                // Fetch order book
+                const orderbook = await server.orderbook(laamAsset, xlmAsset).call();
+                currentOrderBook = orderbook;
+
+                // Update order book display
+                updateOrderBookDisplay(orderbook);
+
+                // Calculate market stats
+                updateMarketStats(orderbook);
+
+                // Update timestamp
+                document.getElementById('last-updated').textContent = 
+                    new Date().toLocaleTimeString();
+
+            } catch (error) {
+                console.error('Error fetching market data:', error);
+                document.getElementById('last-updated').textContent = 'Error loading data';
+            }
+        }
+
+        function updateOrderBookDisplay(orderbook) {
+            const buyOffersBody = document.getElementById('buy-offers-body');
+            const sellOffersBody = document.getElementById('sell-offers-body');
+
+            // Clear existing data
+            buyOffersBody.innerHTML = '';
+            sellOffersBody.innerHTML = '';
+
+            // Process buy offers (bids)
+            const buyOffers = orderbook.bids.slice(0, 5); // Show top 5
+            if (buyOffers.length === 0) {
+                buyOffersBody.innerHTML = '<tr><td colspan="3">No buy offers</td></tr>';
+            } else {
+                buyOffers.forEach(bid => {
+                    const row = document.createElement('tr');
+                    const price = parseFloat(bid.price).toFixed(7);
+                    const amount = parseFloat(bid.amount).toFixed(2);
+                    const total = (parseFloat(bid.price) * parseFloat(bid.amount)).toFixed(7);
+                    
+                    row.innerHTML = `
+                        <td>${price}</td>
+                        <td>${amount}</td>
+                        <td>${total}</td>
+                    `;
+                    buyOffersBody.appendChild(row);
+                });
+            }
+
+            // Process sell offers (asks)
+            const sellOffers = orderbook.asks.slice(0, 5); // Show top 5
+            if (sellOffers.length === 0) {
+                sellOffersBody.innerHTML = '<tr><td colspan="3">No sell offers</td></tr>';
+            } else {
+                sellOffers.forEach(ask => {
+                    const row = document.createElement('tr');
+               
