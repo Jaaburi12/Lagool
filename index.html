@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laam/XLM Trading Widget</title>
-    <script src="https://unpkg.com/stellar-sdk@11.0.0/dist/stellar-sdk.min.js"></script>
+    <script src="https://unpkg.com/@albedo-link/intent@latest/dist/albedo.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -505,32 +505,30 @@
             const placeOrderBtn = document.getElementById("place-order-btn");
 
             try {
-                if (window.freighterApi) {
-                    const isAllowed = await window.freighterApi.isAllowed();
-                    if (isAllowed) {
-                        userPublicKey = await window.freighterApi.getPublicKey();
-                        walletConnected = true;
-                        
-                        statusEl.className = 'wallet-status connected';
-                        statusEl.innerHTML = `✅ Wallet Connected: ${userPublicKey.substring(0, 8)}...`;
-                        
-                        placeOrderBtn.disabled = false;
-                        placeOrderBtn.textContent = 'Place Order';
+                const albedo = window.albedo;
+                if (albedo) {
+                    const response = await albedo.publicKey({
+                        account: "any"
+                    });
+                    userPublicKey = response.pubkey;
+                    walletConnected = true;
 
-                        // Check for Laam trustline
-                        await checkLaamTrustline();
-                    } else {
-                        throw new Error('Wallet not connected');
-                    }
+                    statusEl.className = 'wallet-status connected';
+                    statusEl.innerHTML = `✅ Wallet Connected: ${userPublicKey.substring(0, 8)}...`;
+
+                    placeOrderBtn.disabled = false;
+                    placeOrderBtn.textContent = 'Place Order';
+
+                    await checkLaamTrustline();
                 } else {
-                    throw new Error('Freighter wallet not found');
+                    throw new Error('Albedo wallet not found');
                 }
             } catch (error) {
                 statusEl.className = 'wallet-status error';
-                statusEl.innerHTML = `❌ ${error.message}. <a href="https://freighter.app" target="_blank">Install Freighter</a>`;
-                
+                statusEl.innerHTML = `❌ ${error.message}. <a href="https://albedo.link" target="_blank">Install Albedo</a>`;
+
                 placeOrderBtn.disabled = true;
-                placeOrderBtn.textContent = 'Install Freighter Wallet';
+                placeOrderBtn.textContent = 'Install Albedo Wallet';
             }
         }
 
@@ -612,4 +610,8 @@
             } else {
                 sellOffers.forEach(ask => {
                     const row = document.createElement('tr');
-               
+                    const price = parseFloat(ask.price).toFixed(7);
+                    const amount = parseFloat(ask.amount).toFixed(2);
+                    const total = (parseFloat(ask.price) * parseFloat(ask.amount)).toFixed(7);
+                    
+          
