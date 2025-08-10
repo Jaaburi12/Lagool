@@ -1,36 +1,364 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Laam Token Affiliate</title>
-<style>
-    body { font-family: Arial, sans-serif; background: #1e1e2f; color: white; text-align: center; }
-    .box { background: #2c2c44; padding: 20px; border-radius: 10px; max-width: 400px; margin: auto; }
-    input { width: 90%; padding: 10px; border: none; border-radius: 5px; margin-top: 10px; }
-    button { background: #0693e3; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StellarTerm Laam/XLM Widget</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .stellarterm-widget {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 450px;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+
+        .widget-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .widget-header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .widget-header .pair-info {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .market-overview {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .market-overview h3 {
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .market-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .market-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .market-item .label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+
+        .market-item .value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .market-item .value.positive {
+            color: #4ade80;
+        }
+
+        .market-item .value.negative {
+            color: #f87171;
+        }
+
+        .order-book {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .order-book h3 {
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .order-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .order-section h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .buy-orders h4 {
+            color: #4ade80;
+        }
+
+        .sell-orders h4 {
+            color: #f87171;
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .order-table th {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .order-table td {
+            padding: 6px 4px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .buy-orders .order-table tbody tr:hover {
+            background: rgba(74, 222, 128, 0.2);
+        }
+
+        .sell-orders .order-table tbody tr:hover {
+            background: rgba(248, 113, 113, 0.2);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .footer a {
+            color: #93c5fd;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .refresh-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        @media (max-width: 480px) {
+            .stellarterm-widget {
+                margin: 10px;
+                padding: 16px;
+            }
+
+            .order-sections {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .market-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="stellarterm-widget">
+        <div class="widget-header">
+            <h1>Laam/XLM Trading</h1>
+            <div class="pair-info">StellarTerm Exchange Widget</div>
+        </div>
 
-<h2>Laam Token Affiliate Program</h2>
-<div class="box">
-    <p>Gali magacaaga si aad u hesho link affiliate:</p>
-    <input type="text" id="username" placeholder="Magacaaga">
-    <button onclick="generateLink()">Hel Link-ga Affiliate</button>
-    <p id="link-output" style="margin-top: 15px;"></p>
-</div>
+        <div class="market-overview">
+            <h3>Market Overview</h3>
+            <div class="market-grid">
+                <div class="market-item">
+                    <div class="label">Last Price</div>
+                    <div class="value" id="last-price">0.1367238 XLM</div>
+                </div>
+                <div class="market-item">
+                    <div class="label">USD Price</div>
+                    <div class="value" id="last-usd-price">$0.06047</div>
+                </div>
+                <div class="market-item">
+                    <div class="label">24h Change</div>
+                    <div class="value positive" id="24h-changes">+1.28%</div>
+                </div>
+                <div class="market-item">
+                    <div class="label">24h Volume</div>
+                    <div class="value" id="24h-volume">119.85 XLM</div>
+                </div>
+                <div class="market-item">
+                    <div class="label">24h High</div>
+                    <div class="value" id="24h-high">0.148561 XLM</div>
+                </div>
+                <div class="market-item">
+                    <div class="label">24h Low</div>
+                    <div class="value" id="24h-low">0.1162133 XLM</div>
+                </div>
+            </div>
+        </div>
 
-<script>
-function generateLink() {
-    let name = document.getElementById('username').value.trim();
-    if(name === "") {
-        alert("Fadlan geli magacaaga");
-        return;
-    }
-    let link = "https://laam.online?ref=" + encodeURIComponent(name);
-    document.getElementById('link-output').innerHTML = 
-        `Link-gaaga: <br><input type="text" value="${link}" readonly>`;
-}
-</script>
+        <div class="order-book">
+            <h3>Order Book</h3>
+            <div class="order-sections">
+                <div class="buy-orders">
+                    <h4>Buy Offers</h4>
+                    <table class="order-table">
+                        <thead>
+                            <tr>
+                                <th>Price</th>
+                                <th>Amount</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="buy-offers-body">
+                            <tr>
+                                <td>0.1350</td>
+                                <td>31,000.74</td>
+                                <td>4,185.10</td>
+                            </tr>
+                            <tr>
+                                <td>0.1340</td>
+                                <td>15,500.00</td>
+                                <td>2,077.00</td>
+                            </tr>
+                            <tr>
+                                <td>0.1330</td>
+                                <td>8,200.50</td>
+                                <td>1,090.67</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
+                <div class="sell-orders">
+                    <h4>Sell Offers</h4>
+                    <table class="order-table">
+                        <thead>
+                            <tr>
+                                <th>Price</th>
+                                <th>Amount</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sell-offers-body">
+                            <tr>
+                                <td>0.1370</td>
+                                <td>290.00</td>
+                                <td>39.73</td>
+                            </tr>
+                            <tr>
+                                <td>0.1380</td>
+                                <td>1,250.00</td>
+                                <td>172.50</td>
+                            </tr>
+                            <tr>
+                                <td>0.1390</td>
+                                <td>2,100.00</td>
+                                <td>291.90</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <button class="refresh-btn" onclick="refreshData()">Refresh Data</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Data from <a href="https://stellarterm.com" target="_blank">StellarTerm</a></p>
+            <p>Last updated: <span id="last-updated"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // Update the last updated timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            const timestamp = now.toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            document.getElementById('last-updated').textContent = timestamp;
+        }
+
+        // Simulate data refresh (in a real implementation, this would fetch from an API)
+        function refreshData() {
+            // Add a loading state
+            const refreshBtn = document.querySelector('.refresh-btn');
+            const originalText = refreshBtn.textContent;
+            refreshBtn.textContent = 'Refreshing...';
+            refreshBtn.disabled = true;
+
+            // Simulate API call delay
+            setTimeout(() => {
+                // In a real implementation, you would fetch new data here
+                // For now, we'll just update the timestamp
+                updateTimestamp();
+                
+                // Restore button state
+                refreshBtn.textContent = originalText;
+                refreshBtn.disabled = false;
+                
+                // Add a subtle animation to show data was refreshed
+                document.querySelector('.stellarterm-widget').style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    document.querySelector('.stellarterm-widget').style.transform = 'scale(1)';
+                }, 200);
+            }, 1000);
+        }
+
+        // Initialize timestamp on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTimestamp();
+        });
+
+        // Auto-refresh every 30 seconds (optional)
+        setInterval(updateTimestamp, 30000);
+    </script>
 </body>
 </html>
+
