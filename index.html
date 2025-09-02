@@ -125,6 +125,8 @@
             font-size: 1rem;
             font-weight: 600;
             transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
         }
         
         button:hover {
@@ -146,11 +148,13 @@
             font-weight: 600;
             cursor: pointer;
             border: 2px solid transparent;
+            transition: all 0.3s ease;
         }
         
         .status-btn.active {
             border: 2px solid var(--dark);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            transform: scale(1.05);
         }
         
         .paid {
@@ -165,6 +169,11 @@
         
         .items-list {
             margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
         }
         
         .item-row {
@@ -175,6 +184,13 @@
             padding: 10px;
             background: var(--light);
             border-radius: 5px;
+            align-items: center;
+        }
+        
+        .item-row .fa-times {
+            color: red;
+            cursor: pointer;
+            font-size: 1.2rem;
         }
         
         .invoice-preview {
@@ -194,6 +210,13 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             margin-bottom: 20px;
+            gap: 20px;
+        }
+        
+        .invoice-details > div {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
         }
         
         .invoice-items {
@@ -205,18 +228,25 @@
         .invoice-items th {
             background: var(--secondary);
             color: white;
-            padding: 10px;
+            padding: 12px;
             text-align: left;
         }
         
         .invoice-items td {
-            padding: 10px;
+            padding: 12px;
             border-bottom: 1px solid #ddd;
+        }
+        
+        .invoice-items tr:nth-child(even) {
+            background-color: #f9f9f9;
         }
         
         .invoice-totals {
             margin-top: 20px;
             text-align: right;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
         }
         
         .invoice-totals div {
@@ -228,6 +258,9 @@
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--accent);
+            border-top: 2px solid #ddd;
+            padding-top: 10px;
+            margin-top: 10px;
         }
         
         .action-buttons {
@@ -238,10 +271,12 @@
         
         .btn-print {
             background: var(--secondary);
+            flex: 1;
         }
         
         .btn-reset {
             background: var(--accent);
+            flex: 1;
         }
         
         footer {
@@ -249,6 +284,8 @@
             margin-top: 30px;
             color: var(--dark);
             font-size: 0.9rem;
+            padding: 20px;
+            border-top: 1px solid #ddd;
         }
         
         @media print {
@@ -263,10 +300,30 @@
                 left: 0;
                 top: 0;
                 width: 100%;
+                padding: 0;
+                box-shadow: none;
             }
             .action-buttons {
                 display: none;
             }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: var(--success);
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
         }
     </style>
 </head>
@@ -343,12 +400,13 @@
                     <input type="number" id="item-price" min="0" step="0.01" placeholder="0.00">
                 </div>
                 
-                <button id="add-item-btn">Add Item to Invoice</button>
+                <button id="add-item-btn"><i class="fas fa-plus-circle"></i> Add Item to Invoice</button>
                 
                 <div class="items-list">
                     <h3 class="section-title">Current Items</h3>
                     <div id="items-container">
                         <!-- Items will be added here dynamically -->
+                        <p style="text-align: center; padding: 20px; color: #777;">No items added yet</p>
                     </div>
                 </div>
             </div>
@@ -391,7 +449,7 @@
                         <tbody id="invoice-items-body">
                             <!-- Invoice items will be added here dynamically -->
                             <tr>
-                                <td colspan="4" style="text-align: center;">No items added yet</td>
+                                <td colspan="4" style="text-align: center; padding: 20px; color: #777;">No items added yet</td>
                             </tr>
                         </tbody>
                     </table>
@@ -414,6 +472,8 @@
             <p>© 2023 Labis Laundry Management System | Developed for Labis Laundry</p>
         </footer>
     </div>
+
+    <div class="notification" id="notification">Item added successfully!</div>
 
     <script>
         // Set current date
@@ -452,12 +512,18 @@
             const price = document.getElementById('item-price').value;
             
             if (!type || !description || !quantity || !price) {
-                alert('Please fill all fields for the item');
+                showNotification('Please fill all fields for the item', 'error');
                 return;
             }
             
             // Add to items list
             const itemsContainer = document.getElementById('items-container');
+            
+            // Remove the placeholder if it exists
+            if (itemsContainer.querySelector('p')) {
+                itemsContainer.innerHTML = '';
+            }
+            
             const itemRow = document.createElement('div');
             itemRow.className = 'item-row';
             itemRow.innerHTML = `
@@ -465,7 +531,7 @@
                 <div>${quantity}</div>
                 <div>${price} Birr</div>
                 <div>${(quantity * price).toFixed(2)} Birr</div>
-                <div><i class="fas fa-times" style="color: red; cursor: pointer;"></i></div>
+                <div><i class="fas fa-times" onclick="removeItem(this)"></i></div>
             `;
             itemsContainer.appendChild(itemRow);
             
@@ -487,12 +553,40 @@
             // Update totals
             updateTotals();
             
+            // Show success notification
+            showNotification('Item added successfully!');
+            
             // Clear form
             document.getElementById('item-type').value = '';
             document.getElementById('item-description').value = '';
             document.getElementById('item-quantity').value = '1';
             document.getElementById('item-price').value = '';
         });
+        
+        // Remove item from list
+        function removeItem(element) {
+            const itemRow = element.closest('.item-row');
+            const itemIndex = Array.from(itemRow.parentNode.children).indexOf(itemRow);
+            
+            // Remove from items list
+            itemRow.remove();
+            
+            // Remove from invoice table
+            const invoiceItemsBody = document.getElementById('invoice-items-body');
+            invoiceItemsBody.deleteRow(itemIndex);
+            
+            // If no items left, show placeholder
+            if (document.getElementById('items-container').children.length === 0) {
+                document.getElementById('items-container').innerHTML = '<p style="text-align: center; padding: 20px; color: #777;">No items added yet</p>';
+                invoiceItemsBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #777;">No items added yet</td></tr>';
+            }
+            
+            // Update totals
+            updateTotals();
+            
+            // Show notification
+            showNotification('Item removed successfully!');
+        }
         
         // Update customer information in real-time
         document.getElementById('customer-name').addEventListener('input', function() {
@@ -513,8 +607,10 @@
             const rows = document.getElementById('invoice-items-body').querySelectorAll('tr');
             
             rows.forEach(row => {
-                const total = parseFloat(row.cells[3].textContent.replace(' Birr', ''));
-                subtotal += total;
+                if (row.cells.length > 1) {
+                    const total = parseFloat(row.cells[3].textContent.replace(' Birr', ''));
+                    subtotal += total;
+                }
             });
             
             const tax = subtotal * 0.05;
@@ -525,18 +621,26 @@
             document.getElementById('total').textContent = total.toFixed(2);
         }
         
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.background = type === 'success' ? '#2ecc71' : '#e74c3c';
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
         // Reset form
         function resetForm() {
             if (confirm('Are you sure you want to create a new invoice? Current data will be lost.')) {
                 document.getElementById('customer-name').value = '';
                 document.getElementById('customer-phone').value = '';
                 document.getElementById('customer-address').value = '';
-                document.getElementById('items-container').innerHTML = '';
-                document.getElementById('invoice-items-body').innerHTML = `
-                    <tr>
-                        <td colspan="4" style="text-align: center;">No items added yet</td>
-                    </tr>
-                `;
+                document.getElementById('items-container').innerHTML = '<p style="text-align: center; padding: 20px; color: #777;">No items added yet</p>';
+                document.getElementById('invoice-items-body').innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #777;">No items added yet</td></tr>';
                 
                 document.getElementById('inv-customer-name').textContent = 'Customer Name';
                 document.getElementById('inv-customer-phone').textContent = 'Phone Number';
@@ -562,6 +666,8 @@
                 const pickupDate = new Date();
                 pickupDate.setDate(pickupDate.getDate() + 2);
                 document.getElementById('inv-pickup-date').textContent = pickupDate.toLocaleDateString();
+                
+                showNotification('New invoice created successfully!');
             }
         }
     </script>
