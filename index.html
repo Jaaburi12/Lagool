@@ -52,12 +52,12 @@ button.warn{ background:#f59e0b; color:#1f2937; }
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
       <div>
         <h1 contenteditable="true" id="bizName">Labis Laundry</h1>
-        <div class="muted" contenteditable="true" id="bizAddress">Cinwaan: --</div>
-        <div class="muted" contenteditable="true" id="bizPhone">Tel: +2527xxxxxxx</div>
+        <div class="muted" contenteditable="true" id="bizAddress">address:kella herar --</div>
+        <div class="muted" contenteditable="true" id="bizPhone">Tel: +251915458049</div>
       </div>
       <div style="text-align:right; margin-top:8px;">
         <div class="small">Invoice # <input id="invoiceNo" type="number" value="1" style="width:80px; padding:6px;border-radius:6px;border:1px solid #e6e9ef"></div>
-        <div class="small" style="margin-top:6px">Taariikh: <input id="invoiceDate" type="date"></div>
+        <div class="small" style="margin-top:6px">Date: <input id="invoiceDate" type="date"></div>
         <div id="paidBadge" style="margin-top:10px"></div>
       </div>
     </div>
@@ -135,7 +135,7 @@ button.warn{ background:#f59e0b; color:#1f2937; }
     </div>
 
     <div class="controls no-print" style="margin-top:12px;">
-      <button id="printBtn">Daabac / PDF</button>
+      <button id="printBtn">print / PDF</button>
       <button id="clearStorage" class="warn">Tirtir Xogta</button>
     </div>
 
@@ -171,7 +171,7 @@ const bizPhone=document.getElementById('bizPhone');
 const taxId=document.getElementById('taxId');
 
 let state={
-biz:{name:'Labis Laundry', address:'Cinwaan: --', phone:'+2527xxxxxxx', taxId:'TIN/VAT'},
+biz:{name:'Labis Laundry', address:'Cinwaan: --', phone:'+251915458049', taxId:'TIN/VAT'},
 invoiceNo:1,
 invoiceDate:(new Date()).toISOString().slice(0,10),
 customer:{name:'',phone:''},
